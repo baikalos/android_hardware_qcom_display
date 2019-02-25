@@ -271,7 +271,7 @@ static int cec_send_message(const struct hdmi_cec_device* dev,
                     __FUNCTION__, err, strerror(int(-err)));
         }
     } else {
-        ALOGD_IF(DEBUG, "%s: Sent CEC message - %zd bytes written",
+        ALOGD_IF(DEBUG, "%s: Sent CEC message - %ld bytes written",
                 __FUNCTION__, err);
         return HDMI_RESULT_SUCCESS;
     }
