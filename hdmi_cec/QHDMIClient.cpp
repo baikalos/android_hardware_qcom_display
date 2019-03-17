@@ -50,7 +50,7 @@ void QHDMIClient::onHdmiHotplug(int connected)
 
 void QHDMIClient::onCECMessageRecieved(char *msg, ssize_t len)
 {
-    ALOGD_IF(DEBUG, "%s: CEC message received len: %ld", __FUNCTION__, len);
+    ALOGD_IF(DEBUG, "%s: CEC message received len: %zd", __FUNCTION__, len);
     cec_receive_message(mCtx, msg, len);
 }
 
