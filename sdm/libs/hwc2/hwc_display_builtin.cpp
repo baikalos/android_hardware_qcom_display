@@ -739,7 +739,8 @@ uint32_t HWCDisplayBuiltIn::GetOptimalRefreshRate(bool one_updating_layer) {
     return metadata_refresh_rate_;
   }
 
-  return max_refresh_rate_;
+  //return max_refresh_rate_;
+  return 0;
 }
 
 DisplayError HWCDisplayBuiltIn::Refresh() {
