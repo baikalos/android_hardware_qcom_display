@@ -521,7 +521,7 @@ int HWCDisplay::Init() {
 
   display_intf_->GetRefreshRateRange(&min_refresh_rate_, &max_refresh_rate_);
   error = display_intf_->SetRefreshRate(max_refresh_rate_, 0);
-  current_refresh_rate_ = max_refresh_rate_;
+  //current_refresh_rate_ = max_refresh_rate_;
 
   GetUnderScanConfig();
 
@@ -2227,9 +2227,10 @@ uint32_t HWCDisplay::SanitizeRefreshRate(uint32_t req_refresh_rate) {
 
   if (refresh_rate < min_refresh_rate_) {
     // Pick the next multiple of request which is within the range
-    refresh_rate =
-        (((min_refresh_rate_ / refresh_rate) + ((min_refresh_rate_ % refresh_rate) ? 1 : 0)) *
-         refresh_rate);
+    //refresh_rate =
+    //    (((min_refresh_rate_ / refresh_rate) + ((min_refresh_rate_ % refresh_rate) ? 1 : 0)) *
+    //     refresh_rate);
+    refresh_rate = min_refresh_rate_;
   }
 
   if (refresh_rate > max_refresh_rate_) {
