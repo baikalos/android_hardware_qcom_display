@@ -255,18 +255,35 @@ HWC2::Error HWCDisplayBuiltIn::Validate(uint32_t *out_num_types, uint32_t *out_n
     ToggleCPUHint(one_updating_layer);
   }
 
+  /*
   error = kErrorNone;
+  
   uint32_t refresh_rate = GetOptimalRefreshRate(one_updating_layer);
   if( refresh_rate != 0 ) {
     error = display_intf_->SetRefreshRate(refresh_rate, force_refresh_rate_);
-  }
+  } else {
+    //DLOGI("GetOptimalRefreshRate = 0, current_refresh_rate_=%d, force_refresh_rate_=%d, metadata_refresh_rate_=%d, one_updating_layer=%d", 
+    //    current_refresh_rate_, force_refresh_rate_, metadata_refresh_rate_, one_updating_layer);
+    
+    if( force_refresh_rate_ != 0 ) {
+        error = display_intf_->SetRefreshRate(force_refresh_rate_, force_refresh_rate_);
+    } else if( metadata_refresh_rate_ != 0 ) {
+        error = display_intf_->SetRefreshRate(metadata_refresh_rate_, force_refresh_rate_);
+    } else if ( current_refresh_rate_ != 0 ) {
+        error = display_intf_->SetRefreshRate(current_refresh_rate_, force_refresh_rate_);
+    } else {
+        //error = display_intf_->SetRefreshRate(max_refresh_rate_, force_refresh_rate_);
+    }
+  }*/
 
     // Get the refresh rate set.
+  uint32_t refresh_rate = 0;
   display_intf_->GetRefreshRate(&refresh_rate);
   bool vsync_source = (callbacks_->GetVsyncSource() == id_);
 
   if (error == kErrorNone) {
-    if (vsync_source && (current_refresh_rate_ < refresh_rate)) {
+    if (vsync_source && (current_refresh_rate_ != refresh_rate)) {
+      current_refresh_rate_ = refresh_rate;
       DTRACE_BEGIN("HWC2::Vsync::Enable");
       // Display is ramping up from idle.
       // Client realizes need for resync upon change in config.
@@ -298,7 +315,7 @@ HWC2::Error HWCDisplayBuiltIn::CommitLayerStack() {
 }
 
 bool HWCDisplayBuiltIn::CanSkipCommit() {
-  if (layer_stack_invalid_) {
+  if (layer_stack_invalid_ || !enable_optimize_refresh_) {
     return false;
   }
 
