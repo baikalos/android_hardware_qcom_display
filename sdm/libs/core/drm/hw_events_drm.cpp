@@ -336,12 +336,13 @@ void *HWEventsDRM::DisplayEventHandler() {
   char data[kMaxStringLength]{};
 
   prctl(PR_SET_NAME, event_thread_name_.c_str(), 0, 0, 0);
-  setpriority(PRIO_PROCESS, 0, kThreadPriorityUrgent);
+  //setpriority(PRIO_PROCESS, 0, kThreadPriorityUrgent);
 
   // Real Time task with lowest priority.
+  // Real Time task with lowest priority.
   struct sched_param param = {0};
-  param.sched_priority = sched_get_priority_min(SCHED_FIFO);
-  sched_setscheduler(0, SCHED_FIFO, &param);
+  param.sched_priority = 2;
+  sched_setscheduler(0, SCHED_RR, &param);
 
   while (!exit_threads_) {
     int error = Sys::poll_(poll_fds_.data(), UINT32(poll_fds_.size()), -1);
