@@ -44,6 +44,7 @@ int main(int, char **) {
     ALOGE("Cannot register QTI Allocator 3 service");
     return -EINVAL;
   }
+  android::hardware::setMinSchedulerPolicy(service3, SCHED_NORMAL, -20);
   ALOGI("Initialized qti-allocator 3");
 
 #ifdef TARGET_USES_GRALLOC4
@@ -53,6 +54,7 @@ int main(int, char **) {
     ALOGE("Cannot register QTI Allocator 4 service");
     return -EINVAL;
   }
+  android::hardware::setMinSchedulerPolicy(service4, SCHED_NORMAL, -20);
   ALOGI("Initialized qti-allocator 4");
 #endif
 
