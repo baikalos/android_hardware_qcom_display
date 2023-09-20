@@ -57,6 +57,7 @@ cc_binary {
         "libqservice",
         "libqdutils",
         "libqdMetaData",
+        "libprocessgroup",
         "libdisplaydebug",
         "libsdmutils",
         "libui",

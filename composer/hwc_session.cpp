@@ -82,6 +82,7 @@
 #include "hwc_session.h"
 #include "hwc_debugger.h"
 #include "ipc_impl.h"
+#include <processgroup/processgroup.h>
 
 #define __CLASS__ "HWCSession"
 
@@ -828,6 +829,14 @@ int32_t HWCSession::PresentDisplay(hwc2_display_t display, shared_ptr<Fence> *ou
     return HWC2_ERROR_BAD_DISPLAY;
   }
 
+  thread_local bool setTaskProfileDone = false;
+  if (setTaskProfileDone == false) {
+        if (!SetTaskProfiles(gettid(), {"SFMainPolicy"})) {
+          DLOGW("Failed to add `%d` into SFMainPolicy", gettid());
+      }
+      setTaskProfileDone = true;
+  }
+
   HandleSecureSession();
 
 
@@ -1316,7 +1325,7 @@ int32_t HWCSession::GetDozeSupport(hwc2_display_t display, int32_t *out_support)
     return HWC2_ERROR_NONE;
   }
 
-  *out_support = hwc_session->override_doze_mode_ || hwc_session->hwc_display_[display]->HasSmartPanelConfig() ? 1 : 0;
+  *out_support = override_doze_mode_ || hwc_display_[display]->HasSmartPanelConfig() ? 1 : 0;
 
   return HWC2_ERROR_NONE;
 }
