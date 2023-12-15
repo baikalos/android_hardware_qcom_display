@@ -745,7 +745,7 @@ DisplayError DisplayBuiltIn::SetRefreshRate(uint32_t refresh_rate, bool final_ra
   }
 
   if (CanLowerFps(idle_screen) && !final_rate && !enable_qsync_idle_) {
-    refresh_rate = hw_panel_info_.min_fps;
+    //refresh_rate = hw_panel_info_.min_fps;
   }
 
   if (current_refresh_rate_ != refresh_rate) {
