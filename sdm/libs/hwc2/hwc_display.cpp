@@ -520,8 +520,7 @@ int HWCDisplay::Init() {
   tone_mapper_ = new HWCToneMapper(buffer_allocator_);
 
   display_intf_->GetRefreshRateRange(&min_refresh_rate_, &max_refresh_rate_);
-  error = display_intf_->SetRefreshRate(max_refresh_rate_, 0);
-  //current_refresh_rate_ = max_refresh_rate_;
+  current_refresh_rate_ = max_refresh_rate_;
 
   GetUnderScanConfig();
 
@@ -551,18 +550,11 @@ void HWCDisplay::UpdateConfigs() {
     DisplayConfigVariableInfo info = {};
     GetDisplayAttributesForConfig(INT(i), &info);
     bool config_exists = false;
-
-    if (!smart_panel_config_ && info.smart_panel) {
-      smart_panel_config_ = true;
-    }
-
     for (auto &config : variable_config_map_) {
       if (config.second == info) {
-        if (enable_poms_during_doze_ || (config.second.smart_panel == info.smart_panel)) {
-          config_exists = true;
-          hwc_config_map_.at(i) = config.first;
-          break;
-        }
+        config_exists = true;
+        hwc_config_map_.at(i) = config.first;
+        break;
       }
     }
 
@@ -574,7 +566,7 @@ void HWCDisplay::UpdateConfigs() {
 
   // Update num config count.
   num_configs_ = UINT32(variable_config_map_.size());
-  DLOGI("num_configs = %d smart_panel_config_ = %d", num_configs_, smart_panel_config_);
+  DLOGI("num_configs = %d", num_configs_);
 }
 
 int HWCDisplay::Deinit() {
@@ -1224,6 +1216,11 @@ HWC2::Error HWCDisplay::SetActiveConfig(hwc2_config_t config) {
 
   validated_ = false;
   geometry_changes_ |= kConfigChanged;
+
+  // Cache refresh rate set by client.
+  DisplayConfigVariableInfo info = {};
+  GetDisplayAttributesForConfig(INT(config), &info);
+  active_refresh_rate_ = info.fps;
 
   // Trigger refresh. This config gets applied on next commit.
   callbacks_->Refresh(id_);
@@ -2227,10 +2224,9 @@ uint32_t HWCDisplay::SanitizeRefreshRate(uint32_t req_refresh_rate) {
 
   if (refresh_rate < min_refresh_rate_) {
     // Pick the next multiple of request which is within the range
-    //refresh_rate =
-    //    (((min_refresh_rate_ / refresh_rate) + ((min_refresh_rate_ % refresh_rate) ? 1 : 0)) *
-    //     refresh_rate);
-    refresh_rate = min_refresh_rate_;
+    refresh_rate =
+        (((min_refresh_rate_ / refresh_rate) + ((min_refresh_rate_ % refresh_rate) ? 1 : 0)) *
+         refresh_rate);
   }
 
   if (refresh_rate > max_refresh_rate_) {
@@ -2670,7 +2666,11 @@ HWC2::Error HWCDisplay::SubmitDisplayConfig(hwc2_config_t config) {
   }
 
   validated_ = false;
-  DLOGI("Active configuration changed to: %d", config);
+
+  // Cache refresh rate set by client.
+  DisplayConfigVariableInfo info = {};
+  GetDisplayAttributesForConfig(INT(config), &info);
+  active_refresh_rate_ = info.fps;
 
   return HWC2::Error::None;
 }

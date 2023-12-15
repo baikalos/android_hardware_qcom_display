@@ -157,13 +157,6 @@ int HWCDisplayBuiltIn::Init() {
     use_metadata_refresh_rate_ = false;
   }
 
-  int value = 0;
-  HWCDebugHandler::Get()->GetProperty(ENABLE_POMS_DURING_DOZE, &value);
-  enable_poms_during_doze_ = (value == 1);
-  if (enable_poms_during_doze_) {
-    DLOGI("Enable POMS during Doze mode %" PRIu64 , id_);
-  }
-
   int status = HWCDisplay::Init();
   if (status) {
     return status;
@@ -173,11 +166,18 @@ int HWCDisplayBuiltIn::Init() {
   HWCDebugHandler::Get()->GetProperty(ENABLE_DEFAULT_COLOR_MODE,
                                       &default_mode_status_);
 
-  value = 0;
+  int value = 0;
   HWCDebugHandler::Get()->GetProperty(ENABLE_OPTIMIZE_REFRESH, &value);
   enable_optimize_refresh_ = (value == 1);
   if (enable_optimize_refresh_) {
     DLOGI("Drop redundant drawcycles %d", id_);
+  }
+
+  value = 0;
+  HWCDebugHandler::Get()->GetProperty(ENABLE_POMS_DURING_DOZE, &value);
+  enable_poms_during_doze_ = (value == 1);
+  if (enable_poms_during_doze_) {
+    DLOGI("Enable POMS during Doze mode %" PRIu64 , id_);
   }
 
   int vsyncs = 0;
@@ -188,6 +188,12 @@ int HWCDisplayBuiltIn::Init() {
 
   pmic_intf_ = new PMICInterface();
   pmic_intf_->Init();
+
+  uint32_t config_index = 0;
+  GetActiveDisplayConfig(&config_index);
+  DisplayConfigVariableInfo attr = {};
+  GetDisplayAttributesForConfig(INT(config_index), &attr);
+  active_refresh_rate_ = attr.fps;
 
   return status;
 }
@@ -255,35 +261,15 @@ HWC2::Error HWCDisplayBuiltIn::Validate(uint32_t *out_num_types, uint32_t *out_n
     ToggleCPUHint(one_updating_layer);
   }
 
-  /*
-  error = kErrorNone;
-  
   uint32_t refresh_rate = GetOptimalRefreshRate(one_updating_layer);
-  if( refresh_rate != 0 ) {
-    error = display_intf_->SetRefreshRate(refresh_rate, force_refresh_rate_);
-  } else {
-    //DLOGI("GetOptimalRefreshRate = 0, current_refresh_rate_=%d, force_refresh_rate_=%d, metadata_refresh_rate_=%d, one_updating_layer=%d", 
-    //    current_refresh_rate_, force_refresh_rate_, metadata_refresh_rate_, one_updating_layer);
-    
-    if( force_refresh_rate_ != 0 ) {
-        error = display_intf_->SetRefreshRate(force_refresh_rate_, force_refresh_rate_);
-    } else if( metadata_refresh_rate_ != 0 ) {
-        error = display_intf_->SetRefreshRate(metadata_refresh_rate_, force_refresh_rate_);
-    } else if ( current_refresh_rate_ != 0 ) {
-        error = display_intf_->SetRefreshRate(current_refresh_rate_, force_refresh_rate_);
-    } else {
-        //error = display_intf_->SetRefreshRate(max_refresh_rate_, force_refresh_rate_);
-    }
-  }*/
+  error = display_intf_->SetRefreshRate(refresh_rate, force_refresh_rate_);
 
-    // Get the refresh rate set.
-  uint32_t refresh_rate = 0;
+  // Get the refresh rate set.
   display_intf_->GetRefreshRate(&refresh_rate);
   bool vsync_source = (callbacks_->GetVsyncSource() == id_);
 
   if (error == kErrorNone) {
-    if (vsync_source && (current_refresh_rate_ != refresh_rate)) {
-      current_refresh_rate_ = refresh_rate;
+    if (vsync_source && (current_refresh_rate_ < refresh_rate)) {
       DTRACE_BEGIN("HWC2::Vsync::Enable");
       // Display is ramping up from idle.
       // Client realizes need for resync upon change in config.
@@ -295,7 +281,6 @@ HWC2::Error HWCDisplayBuiltIn::Validate(uint32_t *out_num_types, uint32_t *out_n
     // On success, set current refresh rate to new refresh rate.
     current_refresh_rate_ = refresh_rate;
   }
-  
 
   if (layer_set_.empty()) {
     // Avoid flush for Command mode panel.
@@ -315,7 +300,7 @@ HWC2::Error HWCDisplayBuiltIn::CommitLayerStack() {
 }
 
 bool HWCDisplayBuiltIn::CanSkipCommit() {
-  if (layer_stack_invalid_ || !enable_optimize_refresh_) {
+  if (layer_stack_invalid_) {
     return false;
   }
 
@@ -759,9 +744,7 @@ uint32_t HWCDisplayBuiltIn::GetOptimalRefreshRate(bool one_updating_layer) {
   } else if (use_metadata_refresh_rate_ && one_updating_layer && metadata_refresh_rate_) {
     return metadata_refresh_rate_;
   }
-
-  //return max_refresh_rate_;
-  return 0;
+  return active_refresh_rate_;
 }
 
 DisplayError HWCDisplayBuiltIn::Refresh() {
@@ -1086,7 +1069,13 @@ bool HWCDisplayBuiltIn::HasSmartPanelConfig(void) {
     return IsSmartPanelConfig(config);
   }
 
-  return smart_panel_config_;
+  for (auto &config : variable_config_map_) {
+    if (config.second.smart_panel) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 }  // namespace sdm

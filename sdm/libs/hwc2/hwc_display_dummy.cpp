@@ -74,14 +74,13 @@ HWCDisplayDummy::HWCDisplayDummy(CoreInterface *core_intf, BufferAllocator *buff
   config.y_pixels = 1280;
   config.x_dpi = 200.0f;
   config.y_dpi = 200.0f;
-  config.fps = 120;
-  config.vsync_period_ns = 8300000;
+  config.fps = 60;
+  config.vsync_period_ns = 16600000;
   display_null_.SetFrameBufferConfig(config);
   num_configs_ = 1;
   display_intf_ = &display_null_;
   client_target_ = new HWCLayer(id_, buffer_allocator_);
-  current_refresh_rate_ = 0;
-  max_refresh_rate_ = 120;
+  current_refresh_rate_ = max_refresh_rate_ = 60;
   hwc_config_map_.resize(num_configs_);
   variable_config_map_[0] = config;
   hwc_config_map_.at(0) = 0;

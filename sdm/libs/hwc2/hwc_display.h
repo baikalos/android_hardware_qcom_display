@@ -443,6 +443,7 @@ class HWCDisplay : public DisplayEventHandler {
   uint32_t min_refresh_rate_ = 0;
   uint32_t max_refresh_rate_ = 0;
   uint32_t current_refresh_rate_ = 0;
+  uint32_t active_refresh_rate_ = 0;
   bool use_metadata_refresh_rate_ = false;
   uint32_t metadata_refresh_rate_ = 0;
   uint32_t force_refresh_rate_ = 0;
