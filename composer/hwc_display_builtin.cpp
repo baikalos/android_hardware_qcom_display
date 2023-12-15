@@ -1797,7 +1797,7 @@ void HWCDisplayBuiltIn::SetCpuPerfHintLargeCompCycle() {
   }
 
   //Send large comp cycle hint only for fps >= 120
-  if (active_refresh_rate_ < 120) {
+  if (active_refresh_rate_ < 75) {
     DLOGV_IF(kTagResources, "Skip large comp cycle hint for current fps - %u",
              active_refresh_rate_);
     return;
