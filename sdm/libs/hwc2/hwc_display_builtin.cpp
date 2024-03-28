@@ -300,7 +300,7 @@ HWC2::Error HWCDisplayBuiltIn::CommitLayerStack() {
 }
 
 bool HWCDisplayBuiltIn::CanSkipCommit() {
-  if (layer_stack_invalid_) {
+  if (layer_stack_invalid_ || !enable_optimize_refresh_) {
     return false;
   }
 
