@@ -744,6 +744,7 @@ uint32_t HWCDisplayBuiltIn::GetOptimalRefreshRate(bool one_updating_layer) {
   } else if (use_metadata_refresh_rate_ && one_updating_layer && metadata_refresh_rate_) {
     return metadata_refresh_rate_;
   }
+  if( !active_refresh_rate_ ) return max_refresh_rate_;
   return active_refresh_rate_;
 }
 

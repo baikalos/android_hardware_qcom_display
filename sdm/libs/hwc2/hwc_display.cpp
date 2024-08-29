@@ -1224,6 +1224,8 @@ HWC2::Error HWCDisplay::SetActiveConfig(hwc2_config_t config) {
 
   // Trigger refresh. This config gets applied on next commit.
   callbacks_->Refresh(id_);
+  
+  DLOGI("Active configuration set to: %d", config);
 
   return HWC2::Error::None;
 }
@@ -2671,6 +2673,8 @@ HWC2::Error HWCDisplay::SubmitDisplayConfig(hwc2_config_t config) {
   DisplayConfigVariableInfo info = {};
   GetDisplayAttributesForConfig(INT(config), &info);
   active_refresh_rate_ = info.fps;
+
+  DLOGI("Active configuration changed to: %d", config);
 
   return HWC2::Error::None;
 }
